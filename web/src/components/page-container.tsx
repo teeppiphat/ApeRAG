@@ -10,12 +10,7 @@ import {
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import React, { useMemo } from 'react';
-import {
-  AppDocs,
-  AppGithub,
-  AppLocaleDropdownMenu,
-  AppThemeDropdownMenu,
-} from './app-topbar';
+import { AppDocs, AppGithub, AppThemeDropdownMenu } from './app-topbar';
 import { Separator } from './ui/separator';
 import { SidebarTrigger, useSidebar } from './ui/sidebar';
 
@@ -87,7 +82,6 @@ export const PageHeader = ({
             <>
               <AppGithub />
               <AppDocs />
-              <AppLocaleDropdownMenu />
               <AppThemeDropdownMenu />
             </>
           )}

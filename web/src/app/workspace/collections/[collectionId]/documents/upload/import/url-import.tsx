@@ -31,6 +31,7 @@ function shortUrl(url: string): string {
 }
 
 function ResultSummary({ results }: { results: UrlImportResult[] }) {
+  const page_documents = useTranslations('page_documents');
   const succeeded = results.filter((r) => r.fetch_status === 'success');
   const failed = results.filter((r) => r.fetch_status === 'error');
 
@@ -41,13 +42,17 @@ function ResultSummary({ results }: { results: UrlImportResult[] }) {
         {succeeded.length > 0 && (
           <span className="flex items-center gap-1 text-emerald-600">
             <CheckCircle2 className="size-3.5 shrink-0" />
-            {succeeded.length} 个成功
+            {page_documents('import_url_result_succeeded', {
+              count: String(succeeded.length),
+            })}
           </span>
         )}
         {failed.length > 0 && (
           <span className="flex items-center gap-1 text-red-500">
             <AlertCircle className="size-3.5 shrink-0" />
-            {failed.length} 个失败
+            {page_documents('import_url_result_failed', {
+              count: String(failed.length),
+            })}
           </span>
         )}
       </div>

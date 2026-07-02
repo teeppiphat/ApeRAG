@@ -7,8 +7,8 @@
   "username_placeholder": "Username",
   "password": "Password",
   "password_placeholder": "Password",
-  "email": "邮箱",
-  "email_placeholder": "邮箱",
+  "email": "Email",
+  "email_placeholder": "Email",
 
   "signin": "Sign In",
   "login_in_with_a_third_party_account": "Login with a third-party account",

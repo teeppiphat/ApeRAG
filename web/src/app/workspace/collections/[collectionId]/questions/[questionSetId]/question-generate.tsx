@@ -34,7 +34,7 @@ import { apiClient } from '@/lib/api/client';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Slot } from '@radix-ui/react-slot';
 import { Bot, LoaderCircle } from 'lucide-react';
-import { useLocale, useTranslations } from 'next-intl';
+import { useTranslations } from 'next-intl';
 
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
@@ -72,36 +72,6 @@ Please generate {NUMBER_OF_QUESTIONS} questions based on the document above. The
 ]
 `;
 
-const defaultPromptCN = `你是一个善于提出问题的专家。请仔细阅读以下文档内容，并根据内容生成两种类型的问题和对应的标准答案。
-
-**问题类型:**
-1.  **事实性问题 (Factual)**: 可以直接从文本中找到明确答案的问题。
-2.  **推理性问题 (Inferential)**: 需要结合文本中多个信息点进行推理、比较或总结才能得出答案的问题。
-
-**文档内容:**
-
-{DOCUMENT_CONTENT}
-
-**你的任务:**
-请根据以上文档，生成 {NUMBER_OF_QUESTIONS} 个问题。事实性问题和推理性问题的数量应各占一半。提问的语言应与文档的语言尽量保持一致。请以 JSON 格式输出一个问题列表，每个问题对象包含三个字段: \`question_type\` ('FACTUAL' 或 'INFERENTIAL'), \`question_text\` (问题内容), 和 \`ground_truth\` (基于文档内容得到的标准答案)。
-
-**重要提示**: 你的回答应该只包含 JSON 对象，不应有任何其他文本或解释。
-
-**输出示例:**
-[
-  {
-    "question_type": "FACTUAL",
-    "question_text": "文档中提到的项目启动于哪一年？",
-    "ground_truth": "根据文档，该项目于2021年正式启动。"
-  },
-  {
-    "question_type": "INFERENTIAL",
-    "question_text": "项目早期阶段和后期阶段的主要挑战有何不同？",
-    "ground_truth": "项目早期挑战主要是技术选型和团队组建，后期挑战则转变为系统性能优化和市场推广。"
-  }
-]
-`;
-
 const generateSchema = z.object({
   llm_config: z.object({
     model_name: z.string().min(1),
@@ -125,7 +95,6 @@ export const QuestionGenerate = ({
   const common_action = useTranslations('common.action');
   const [loading, setLoading] = useState<boolean>(false);
   const [agentModels, setAgentModels] = useState<ProviderModel[]>([]);
-  const locale = useLocale();
   const { collection } = useCollectionContext();
   const form = useForm<z.infer<typeof generateSchema>>({
     resolver: zodResolver(generateSchema),
@@ -136,7 +105,7 @@ export const QuestionGenerate = ({
         model_service_provider: '',
       },
       question_count: 10,
-      prompt: locale === 'zh-CN' ? defaultPromptCN : defaultPrompt,
+      prompt: defaultPrompt,
     },
   });
   const agentModelName = useWatch({

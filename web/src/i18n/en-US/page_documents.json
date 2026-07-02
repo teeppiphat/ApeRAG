@@ -42,6 +42,8 @@
   "import_url_fetching": "Fetching...",
   "import_url_success": "{count} page(s) added to staging area",
   "import_url_partial": "{succeeded} succeeded, {failed} failed",
+  "import_url_result_succeeded": "{count} succeeded",
+  "import_url_result_failed": "{count} failed",
   "import_text_title": "Paste Text",
   "import_text_desc": "Paste text content to import into your knowledge base.",
   "import_text_title_label": "Title (optional)",

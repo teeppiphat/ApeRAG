@@ -4,7 +4,7 @@ import { cookies } from 'next/headers';
 
 const localeCookieName = 'locale';
 
-const locales = ['en-US', 'zh-CN'] as const;
+const locales = ['en-US'] as const;
 
 export type LocaleEnum = (typeof locales)[number];
 

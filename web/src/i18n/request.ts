@@ -7,7 +7,7 @@ export default getRequestConfig(async () => {
   /**
    * user timezone
    */
-  const timeZone = 'Asia/Shanghai';
+  const timeZone = 'UTC';
 
   return {
     locale,

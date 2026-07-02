@@ -11,10 +11,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import {
-  Check,
   ChevronsUpDown,
   CircleQuestionMark,
-  Globe,
   Moon,
   ShieldUser,
   Sun,
@@ -30,8 +28,7 @@ import { useAppContext } from '@/components/providers/app-provider';
 import { cn } from '@/lib/utils';
 
 import { useIsMobile } from '@/hooks/use-mobile';
-import { setLocale } from '@/services/cookies';
-import { useLocale, useTranslations } from 'next-intl';
+import { useTranslations } from 'next-intl';
 import { FaGithub } from 'react-icons/fa6';
 import { NavigationMenu, NavigationMenuList } from './ui/navigation-menu';
 import { UserAvatar, UserAvatarProfile } from './user-avatar';
@@ -64,7 +61,6 @@ export const AppUserDropdownMenu = () => {
   const { user, signIn, signOut } = useAppContext();
   const username = user?.username || user?.email?.split('@')[0];
   const isMobile = useIsMobile();
-  const locale = useLocale();
   const page_auth = useTranslations('page_auth');
 
   return (
@@ -95,25 +91,6 @@ export const AppUserDropdownMenu = () => {
             <DropdownMenuSeparator />
           </>
         )}
-
-        <DropdownMenuGroup>
-          <DropdownMenuItem onClick={() => setLocale('en-US')}>
-            <Check
-              data-active={locale === 'en-US'}
-              className="opacity-0 data-[active=true]:opacity-100"
-            />
-            English
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => setLocale('zh-CN')}>
-            <Check
-              data-active={locale === 'zh-CN'}
-              className="opacity-0 data-[active=true]:opacity-100"
-            />
-            简体中文
-          </DropdownMenuItem>
-        </DropdownMenuGroup>
-
-        <DropdownMenuSeparator />
 
         {user && (
           <>
@@ -175,40 +152,6 @@ export const AppThemeDropdownMenu = () => {
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => setTheme('system')}>
           System
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
-};
-
-export const AppLocaleDropdownMenu = () => {
-  const locale = useLocale();
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="data-[state=open]:bg-accent"
-        >
-          <Globe />
-          <span className="sr-only">Toggle locale</span>
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent side="bottom" align="end">
-        <DropdownMenuItem onClick={() => setLocale('en-US')}>
-          <Check
-            data-active={locale === 'en-US'}
-            className="opacity-0 data-[active=true]:opacity-100"
-          />
-          English
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setLocale('zh-CN')}>
-          <Check
-            data-active={locale === 'zh-CN'}
-            className="opacity-0 data-[active=true]:opacity-100"
-          />
-          简体中文
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
