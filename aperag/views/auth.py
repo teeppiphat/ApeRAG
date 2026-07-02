@@ -43,6 +43,9 @@ logger = logging.getLogger(__name__)
 
 COOKIE_MAX_AGE = 86400
 
+# Fixed username for the auto-provisioned local user when AUTH_TYPE=none
+LOCAL_USER_USERNAME = "local"
+
 
 class UserManager(BaseUserManager[User, str]):
     reset_password_token_secret = settings.jwt_secret
@@ -143,6 +146,38 @@ class UserManager(BaseUserManager[User, str]):
         return str(value)
 
 
+async def ensure_local_user(user_manager: "UserManager") -> User:
+    """Get-or-create the fixed local admin user used when AUTH_TYPE=none.
+
+    Only initializes resources (quotas/api keys/bot/chat collection) the first
+    time the row is created; subsequent calls just fetch the existing row.
+    """
+    from sqlalchemy import select
+
+    session = user_manager.user_db.session
+    result = await session.execute(select(User).where(User.username == LOCAL_USER_USERNAME))
+    user = result.scalars().first()
+    if user:
+        return user
+
+    user = User(
+        username=LOCAL_USER_USERNAME,
+        email=None,
+        hashed_password=user_manager.password_helper.hash(secrets.token_urlsafe(32)),
+        role=Role.ADMIN,
+        is_active=True,
+        is_verified=True,
+        date_joined=utc_now(),
+    )
+    session.add(user)
+    await session.commit()
+    await session.refresh(user)
+
+    await user_manager.on_after_register(user)
+    logger.info(f"Bootstrapped local user for AUTH_TYPE=none ({user.id})")
+    return user
+
+
 # JWT Strategy
 def get_jwt_strategy() -> JWTStrategy:
     return JWTStrategy(secret=settings.jwt_secret, lifetime_seconds=COOKIE_MAX_AGE)
@@ -184,6 +219,7 @@ fastapi_users = FastAPIUsers[User, str](
 # --- WebSocket Authentication ---
 async def authenticate_websocket_user(websocket: WebSocket, user_manager: UserManager) -> Optional[str]:
     """Authenticate WebSocket connection using session cookie"""
+    user_id: Optional[str] = None
     try:
         cookies_header = None
         if hasattr(websocket, "headers"):
@@ -199,29 +235,34 @@ async def authenticate_websocket_user(websocket: WebSocket, user_manager: UserMa
                             break
                 except (TypeError, ValueError):
                     logger.debug("WebSocket headers format not supported for authentication")
+        session_token = None
+        if cookies_header:
+            for cookie in cookies_header.split(";"):
+                cookie = cookie.strip()
+                if cookie.startswith("session="):
+                    session_token = cookie.split("=", 1)[1]
+                    break
         if not cookies_header:
             logger.debug("No cookies found in WebSocket headers")
-            return None
-        session_token = None
-        for cookie in cookies_header.split(";"):
-            cookie = cookie.strip()
-            if cookie.startswith("session="):
-                session_token = cookie.split("=", 1)[1]
-                break
-        if not session_token:
+        elif not session_token:
             logger.debug("No session cookie found")
-            return None
-        jwt_strategy = get_jwt_strategy()
-        user_data = await jwt_strategy.read_token(session_token, user_manager)
-        if user_data:
-            logger.debug(f"Successfully authenticated user from WebSocket: {user_data.id}")
-            return str(user_data.id)
         else:
-            logger.debug("JWT token validation returned no user data")
-            return None
+            jwt_strategy = get_jwt_strategy()
+            user_data = await jwt_strategy.read_token(session_token, user_manager)
+            if user_data:
+                logger.debug(f"Successfully authenticated user from WebSocket: {user_data.id}")
+                user_id = str(user_data.id)
+            else:
+                logger.debug("JWT token validation returned no user data")
     except Exception as e:
         logger.error(f"WebSocket authentication error: {e}")
-        return None
+
+    if user_id:
+        return user_id
+    if settings.auth_type == "none":
+        local_user = await ensure_local_user(user_manager)
+        return str(local_user.id)
+    return None
 
 
 # --- API Key Authentication ---
@@ -259,7 +300,10 @@ async def authenticate_api_key(request: Request, session: AsyncSessionDep) -> Op
 
 # --- Current User Dependency ---
 async def optional_user(
-    request: Request, session: AsyncSessionDep, user: User = Depends(fastapi_users.current_user(optional=True))
+    request: Request,
+    session: AsyncSessionDep,
+    user: User = Depends(fastapi_users.current_user(optional=True)),
+    user_manager: UserManager = Depends(get_user_manager),
 ) -> Optional[User]:
     """Get current user from JWT/Cookie, OAuth, or API Key."""
     if user:
@@ -271,6 +315,11 @@ async def optional_user(
         request.state.user_id = api_user.id
         request.state.username = api_user.username
         return api_user
+    if settings.auth_type == "none":
+        local_user = await ensure_local_user(user_manager)
+        request.state.user_id = local_user.id
+        request.state.username = local_user.username
+        return local_user
     return None
 
 

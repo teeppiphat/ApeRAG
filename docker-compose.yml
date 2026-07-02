@@ -34,7 +34,7 @@ services:
     environment:
       - DOCRAY_HOST=${DOCRAY_HOST}
     ports:
-      - "8000:8000"
+      - "127.0.0.1:8000:8000"
     command: ["/app/scripts/entrypoint.sh", "/app/scripts/start-api.sh"]
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:8000/health || curl -f http://localhost:8000/docs || exit 1"]
@@ -58,7 +58,7 @@ services:
       - API_SERVER_ENDPOINT=http://api:8000
       - API_SERVER_BASE_PATH=/api/v1
     ports:
-      - "3000:3000"
+      - "127.0.0.1:3000:3000"
 
   celeryworker:
     image: ${REGISTRY:-docker.io}/apecloud/aperag:${VERSION:-v0.0.0-nightly}
@@ -121,7 +121,7 @@ services:
       - .env
       - envs/docker.env.overrides
     ports:
-      - "5555:5555"
+      - "127.0.0.1:5555:5555"
     environment:
       - NODE_IP=aperag-flower
     command: ["/app/scripts/entrypoint.sh", "/app/scripts/start-celery-flower.sh"]
@@ -135,7 +135,7 @@ services:
     volumes:
       - aperag-postgres-data:/var/lib/postgresql/data
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     environment:
       - POSTGRES_PASSWORD=postgres
       - POSTGRES_USER=postgres
@@ -153,7 +153,7 @@ services:
     volumes:
       - aperag-redis-data:/data
     ports:
-      - "6379:6379"
+      - "127.0.0.1:6379:6379"
     healthcheck:
       test: ["CMD-SHELL", "redis-cli ping | grep PONG"]
       interval: 10s
@@ -167,7 +167,7 @@ services:
     volumes:
       - aperag-qdrant-data:/qdrant/storage
     ports:
-      - "6333:6333"
+      - "127.0.0.1:6333:6333"
     healthcheck:
       test: ["CMD-SHELL", "nc -z localhost 6333 || timeout 3 bash -c '</dev/tcp/localhost/6333' || exit 1"]
       interval: 10s
@@ -179,7 +179,7 @@ services:
     image: ${REGISTRY:-docker.io}/apecloud/elasticsearch:8.8.2
     container_name: aperag-es
     ports:
-      - "9200:9200"
+      - "127.0.0.1:9200:9200"
     environment:
       - "discovery.type=single-node"
       - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
@@ -200,9 +200,9 @@ services:
     image: jaegertracing/all-in-one:1.60
     container_name: aperag-jaeger
     ports:
-      - "16686:16686"  # Jaeger UI
-      - "14268:14268"  # HTTP collector
-      - "14250:14250"  # gRPC collector
+      - "127.0.0.1:16686:16686"  # Jaeger UI
+      - "127.0.0.1:14268:14268"  # HTTP collector
+      - "127.0.0.1:14250:14250"  # gRPC collector
       - "6831:6831/udp"  # UDP agent
       - "6832:6832/udp"  # UDP agent
     environment:
@@ -218,8 +218,8 @@ services:
     image: neo4j:5.26.5-enterprise
     container_name: aperag-neo4j
     ports:
-      - "7474:7474"  # HTTP
-      - "7687:7687"  # Bolt
+      - "127.0.0.1:7474:7474"  # HTTP
+      - "127.0.0.1:7687:7687"  # Bolt
     environment:
       - NEO4J_AUTH=neo4j/password
       - NEO4J_PLUGINS=["apoc"]
@@ -236,8 +236,8 @@ services:
     image: ${REGISTRY:-docker.io}/apecloud/doc-ray:${DOCRAY_VERSION:-v0.2.0}
     container_name: aperag-docray
     ports:
-      - "8265:8265"
-      - "8639:8639"
+      - "127.0.0.1:8265:8265"
+      - "127.0.0.1:8639:8639"
     profiles: ["docray"]
     environment:
       - STANDALONE_MODE=true
@@ -250,8 +250,8 @@ services:
     image: ${REGISTRY:-docker.io}/apecloud/doc-ray:${DOCRAY_VERSION:-v0.2.0}
     container_name: aperag-docray-gpu
     ports:
-      - "8265:8265"
-      - "8639:8639"
+      - "127.0.0.1:8265:8265"
+      - "127.0.0.1:8639:8639"
     profiles: ["docray-gpu"]
     environment:
       - STANDALONE_MODE=true

@@ -45,6 +45,8 @@ async def config_view() -> Config:
             )
         case "cookie":
             pass
+        case "none":
+            pass
         case _:
             raise ValueError(f"Unsupported auth type: {settings.auth_type}")
 

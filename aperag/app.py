@@ -62,11 +62,31 @@ from aperag.views.web import router as web_router
 mcp_app = mcp_server.http_app(path="/", stateless_http=True)
 
 
+async def _bootstrap_local_user_if_needed():
+    """When AUTH_TYPE=none, ensure the fixed local admin user exists before serving requests."""
+    if settings.auth_type != "none":
+        return
+
+    from fastapi_users.db import SQLAlchemyUserDatabase
+
+    from aperag.config import get_async_session
+    from aperag.db.models import OAuthAccount, User
+    from aperag.views.auth import UserManager, ensure_local_user
+
+    async for session in get_async_session():
+        user_db = SQLAlchemyUserDatabase(session, User, OAuthAccount)
+        user_manager = UserManager(user_db)
+        await ensure_local_user(user_manager)
+        break
+
+
 # Combined lifespan function for both MCP and Agent session management
 async def combined_lifespan(app: FastAPI):
     """Combined lifespan manager for MCP and Agent sessions."""
     # Initialize the global proxy listener at startup
     await agent_event_listener.initialize()
+
+    await _bootstrap_local_user_if_needed()
 
     # Start MCP server first
     async with mcp_app.lifespan(app):
