@@ -35,6 +35,12 @@ const nextConfig: NextConfig = {
     serverActions: {
       bodySizeLimit: '100mb',
     },
+    // Next.js buffers request bodies proxied through middleware (e.g. document
+    // uploads routed via withApiProxy) and silently truncates them past this
+    // limit. Default is 10MB, which is well under the backend's own upload
+    // limit, so large document uploads were getting truncated before reaching
+    // the API. Match the backend's MAX_DOCUMENT_SIZE (100MB) instead.
+    middlewareClientMaxBodySize: '100mb',
   },
 
   // Will only be available on the server side
