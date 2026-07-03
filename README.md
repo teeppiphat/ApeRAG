@@ -1,4 +1,4 @@
-# ApeRAG
+# ApeRAG Solo
 
 ![HarryPotterKG2.png](docs%2Fen-US%2Fimages%2FHarryPotterKG2.png)
 
@@ -6,7 +6,11 @@
 
 ApeRAG is a RAG (Retrieval-Augmented Generation) platform that combines Graph RAG, vector search, and full-text search with AI agents. Build hybrid-retrieval AI applications with multimodal document processing, intelligent agents, and a knowledge graph over your own documents.
 
-**This fork** (`teeppiphat/ApeRAG`) is customized for **single-machine, single-user deployment** — no login/registration required, English-only UI, and built-in Thai-language document/embedding support. See [CHANGELOG.md](./CHANGELOG.md) for the full list of changes from upstream [`apecloud/ApeRAG`](https://github.com/apecloud/ApeRAG).
+**ApeRAG Solo** (`teeppiphat/ApeRAG`) is a fork customized for **single-machine, single-user deployment** — no login/registration required, English-only UI, and built-in Thai-language document/embedding support. See [CHANGELOG.md](./CHANGELOG.md) for the full list of changes from upstream [`apecloud/ApeRAG`](https://github.com/apecloud/ApeRAG).
+
+> **คำอธิบายโครงการ (ภาษาไทย)**
+>
+> ApeRAG Solo คือ [ApeRAG](https://github.com/apecloud/ApeRAG) เวอร์ชันที่ปรับแต่งให้เหมาะกับการใช้งาน **คนเดียวในเครื่องเดียว** — ไม่ต้องล็อกอินหรือลงทะเบียนก่อนใช้งาน ระบบสร้างผู้ใช้ admin ให้อัตโนมัติ พร้อมรองรับการค้นหาและสร้าง embedding ภาษาไทยควบคู่กับภาษาอังกฤษ (เลือก analyzer และโมเดลให้เหมาะกับภาษาของเอกสารแต่ละชุด) เหมาะสำหรับใครที่อยากมีระบบ RAG ของตัวเองรันบนเครื่อง Mac/Linux/Windows โดยไม่ต้องพึ่งพา cloud หรือดูแลระบบผู้ใช้หลายคนแบบองค์กร ดูรายละเอียดการเปลี่ยนแปลงทั้งหมดจากต้นทางได้ที่ [CHANGELOG.md](./CHANGELOG.md)
 
 - [Quick Start](#quick-start)
 - [Key Features](#key-features)

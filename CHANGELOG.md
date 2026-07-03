@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes made in this fork (`teeppiphat/ApeRAG`) on top of upstream [`apecloud/ApeRAG`](https://github.com/apecloud/ApeRAG) are documented here. Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
+All notable changes made in this fork, **ApeRAG Solo** (`teeppiphat/ApeRAG`), on top of upstream [`apecloud/ApeRAG`](https://github.com/apecloud/ApeRAG) are documented here. Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## 2026-07-03 — Single-machine, no-login, Thai support
 
@@ -12,6 +12,7 @@ This fork's stated direction going forward: single-machine deployment only (no K
 - `bge-m3` set as the default embedding model (tagged `default_for_embedding`) — chosen over `qwen3-embedding` for better cross-lingual (Thai↔English) retrieval at 4x less vector storage.
 
 ### Changed
+- Project named **ApeRAG Solo** in the docs (README, this changelog) to reflect the single-user/single-machine direction. The GitHub repo, package names, and Docker image tags are unchanged for now.
 - Frontend host port moved from `3000` to `8088` to reduce collisions with other local dev servers.
 - All Docker Compose published ports bound to `127.0.0.1` instead of `0.0.0.0`, since no-login mode means anything reachable on the network would otherwise have full admin access.
 - Collection content-language default changed from `zh-CN` to `en-US`.
