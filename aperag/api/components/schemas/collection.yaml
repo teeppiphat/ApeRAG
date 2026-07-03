@@ -172,13 +172,14 @@ collectionConfig:
     language:
       type: string
       description: Language for the collection content and processing
-      default: "zh-CN"
+      default: "en-US"
       enum:
         - "zh-CN"
         - "en-US"
         - "ja-JP"
         - "ko-KR"
-      example: "zh-CN"
+        - "th-TH"
+      example: "en-US"
     embedding:
       $ref: './model.yaml#/modelSpec'
     completion:

@@ -262,11 +262,18 @@ class FulltextIndexer(BaseIndexer):
             if not keywords:
                 return []
 
-            # Search in both content and title fields
+            # Search in both content and title fields. Each keyword is one should-clause
+            # (matching content OR title), so minimum_should_match counts per keyword.
+            # Doubling clauses per-field-per-keyword (as before) meant minimum_should_match
+            # was computed over keywords*2 clauses - with title commonly empty (e.g. plain
+            # text uploads), that structurally capped the achievable match rate below the
+            # threshold and made fulltext search return nothing once 3+ keywords were extracted.
             query = {
                 "bool": {
-                    "should": [{"match": {"content": keyword}} for keyword in keywords]
-                    + [{"match": {"title": keyword}} for keyword in keywords],
+                    "should": [
+                        {"bool": {"should": [{"match": {"content": keyword}}, {"match": {"title": keyword}}]}}
+                        for keyword in keywords
+                    ],
                     "minimum_should_match": "80%",
                 },
             }
@@ -323,7 +330,7 @@ class KeywordExtractor:
 
 
 class IKKeywordExtractor(KeywordExtractor):
-    """Extract keywords from text using IK analyzer"""
+    """Extract keywords from text using the index's configured content-field analyzer"""
 
     def __init__(self, ctx: Dict[str, Any]):
         super().__init__(ctx)
@@ -360,7 +367,9 @@ class IKKeywordExtractor(KeywordExtractor):
                 logger.warning("index %s not exists", self.index_name)
                 return []
 
-            resp = await self.client.indices.analyze(index=self.index_name, body={"text": text, "analyzer": "ik_smart"})
+            # Use the "content" field's own configured analyzer (ik_smart/thai/english/standard,
+            # picked per collection language at index-creation time) instead of hardcoding one.
+            resp = await self.client.indices.analyze(index=self.index_name, body={"text": text, "field": "content"})
 
             tokens = set()
             for item in resp.body["tokens"]:
@@ -546,16 +555,34 @@ async def extract_keywords(text: str, ctx: Dict[str, Any]) -> List[str]:
     return []
 
 
-def create_index(index: str):
+def _text_field_analyzers(language: Optional[str]) -> Dict[str, str]:
+    """Pick the ES analyzer/search_analyzer pair for a collection's content language.
+
+    ik_max_word/ik_smart (the IK Analyzer) only know Chinese word boundaries and
+    vocabulary - running Thai or English text through them produces near-garbage
+    tokens. Elasticsearch ships a dedicated "thai" analyzer (Lucene's ThaiAnalyzer)
+    that needs no plugin, and "english" adds stemming/stopwords standard doesn't.
+    """
+    if language == "zh-CN":
+        return {"analyzer": "ik_max_word", "search_analyzer": "ik_smart"}
+    if language == "th-TH":
+        return {"analyzer": "thai", "search_analyzer": "thai"}
+    if language == "en-US":
+        return {"analyzer": "english", "search_analyzer": "english"}
+    return {"analyzer": "standard", "search_analyzer": "standard"}
+
+
+def create_index(index: str, language: Optional[str] = None):
     """Create ES index with proper mapping for chunks"""
     config = _create_es_client_config()
     es = Elasticsearch(settings.es_host, **config)
 
     if not es.indices.exists(index=index).body:
+        text_analyzers = _text_field_analyzers(language)
         mapping = {
             "properties": {
-                "content": {"type": "text", "analyzer": "ik_max_word", "search_analyzer": "ik_smart"},
-                "title": {"type": "text", "analyzer": "ik_max_word", "search_analyzer": "ik_smart"},
+                "content": {"type": "text", **text_analyzers},
+                "title": {"type": "text", **text_analyzers},
                 "document_id": {"type": "keyword"},
                 "chunk_id": {"type": "keyword"},
                 "name": {"type": "keyword"},

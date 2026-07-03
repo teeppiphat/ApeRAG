@@ -64,7 +64,7 @@ class CollectionTask:
             self._initialize_vector_databases(collection_id, collection)
 
             # Initialize fulltext index
-            self._initialize_fulltext_index(collection_id)
+            self._initialize_fulltext_index(collection_id, collection)
 
             # Update collection status
             collection.status = CollectionStatus.ACTIVE
@@ -131,11 +131,12 @@ class CollectionTask:
 
         logger.debug(f"Initialized vector databases for collection {collection_id}")
 
-    def _initialize_fulltext_index(self, collection_id: str) -> None:
+    def _initialize_fulltext_index(self, collection_id: str, collection) -> None:
         """Initialize fulltext search index"""
         index_name = generate_fulltext_index_name(collection_id)
-        create_index(index_name)
-        logger.debug(f"Initialized fulltext index {index_name}")
+        config = parseCollectionConfig(collection.config)
+        create_index(index_name, language=config.language)
+        logger.debug(f"Initialized fulltext index {index_name} (language={config.language})")
 
     def _delete_knowledge_graph_data(self, collection) -> Dict[str, Any]:
         """Delete knowledge graph data for the collection"""

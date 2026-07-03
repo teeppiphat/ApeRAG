@@ -246,6 +246,7 @@
     "language": "Language",
     "language_zh_CN": "Simplified chinese",
     "language_en_US": "English",
+    "language_th_TH": "Thai",
     "description": "Description",
     "description_placeholder": "Please describe the general meaning of a collection.",
     "index_types": "Index Types",

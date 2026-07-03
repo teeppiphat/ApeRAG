@@ -391,12 +391,16 @@ export const CollectionForm = ({ action }: { action: 'add' | 'edit' }) => {
                         className="mt-2 flex flex-row gap-4 items-center"
                       >
                         <Label>
-                          <RadioGroupItem value="zh-CN" />
-                          {page_collections('language_zh_CN')}
-                        </Label>
-                        <Label>
                           <RadioGroupItem value="en-US" />
                           {page_collections('language_en_US')}
+                        </Label>
+                        <Label>
+                          <RadioGroupItem value="th-TH" />
+                          {page_collections('language_th_TH')}
+                        </Label>
+                        <Label>
+                          <RadioGroupItem value="zh-CN" />
+                          {page_collections('language_zh_CN')}
                         </Label>
                       </RadioGroup>
                     </FormControl>

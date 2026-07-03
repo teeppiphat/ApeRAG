@@ -75,7 +75,8 @@ export const AgentMessageLanguageEnum = {
     es_ES: 'es-ES',
     it_IT: 'it-IT',
     pt_BR: 'pt-BR',
-    ru_RU: 'ru-RU'
+    ru_RU: 'ru-RU',
+    th_TH: 'th-TH'
 } as const;
 
 export type AgentMessageLanguageEnum = typeof AgentMessageLanguageEnum[keyof typeof AgentMessageLanguageEnum];

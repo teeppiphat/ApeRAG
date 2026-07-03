@@ -146,10 +146,10 @@ class CollectionConfig(BaseModel):
         )
     )
     index_prompts: Optional[IndexPrompts] = None
-    language: Optional[Literal['zh-CN', 'en-US', 'ja-JP', 'ko-KR']] = Field(
-        'zh-CN',
+    language: Optional[Literal['zh-CN', 'en-US', 'ja-JP', 'ko-KR', 'th-TH']] = Field(
+        'en-US',
         description='Language for the collection content and processing',
-        examples=['zh-CN'],
+        examples=['en-US'],
     )
     embedding: Optional[ModelSpec] = None
     completion: Optional[ModelSpec] = None
@@ -644,8 +644,8 @@ class TitleGenerateRequest(BaseModel):
     max_length: Optional[conint(ge=6, le=50)] = Field(
         20, description='Maximum length of the generated title'
     )
-    language: Optional[Literal['zh-CN', 'en-US', 'ja-JP', 'ko-KR']] = Field(
-        'zh-CN', description='Language for the title generation (IETF BCP 47 tag)'
+    language: Optional[Literal['zh-CN', 'en-US', 'ja-JP', 'ko-KR', 'th-TH']] = Field(
+        'en-US', description='Language for the title generation (IETF BCP 47 tag)'
     )
     turns: Optional[conint(ge=1)] = Field(
         1, description='Number of most recent conversation turns to consider'
@@ -2778,6 +2778,7 @@ class AgentMessage(BaseModel):
             'it-IT',
             'pt-BR',
             'ru-RU',
+            'th-TH',
         ]
     ] = Field(
         'en-US', description='Language preference for the response', examples=['en-US']

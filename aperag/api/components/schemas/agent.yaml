@@ -42,6 +42,7 @@ AgentMessage:
         - it-IT
         - pt-BR
         - ru-RU
+        - th-TH
     files:
       type: array
       items:
