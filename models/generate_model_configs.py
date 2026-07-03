@@ -238,9 +238,11 @@ def generate_model_specs(models, provider, mode, blocklist=None, tag_rules=None)
                 continue
 
             # Per user request, only process models with explicitly defined input and output tokens.
+            # Embedding models have no output tokens in litellm's cost map (there's nothing to
+            # generate), so max_output_tokens is always None for them - don't filter on it here.
             max_input = info.get('max_input_tokens')
             max_output = info.get('max_output_tokens')
-            if max_input is None or max_output is None:
+            if max_input is None or (max_output is None and mode != 'embedding'):
                 continue
 
             # Also require the legacy max_tokens for the context_window calculation.
@@ -456,9 +458,11 @@ def create_gemini_config():
     rerank_blocklist = []
 
     # Define tag rules
+    # litellm's gemini catalog keys chat models with the "gemini/" prefix
+    # (e.g. "gemini/gemini-2.5-flash"), unlike openai/anthropic which use bare names.
     completion_tag_rules = {
-        'enable_for_collection': ['gemini-2.5-flash'],
-        'enable_for_agent': ['gemini-2.5-flash', 'gemini-2.5-pro'],
+        'enable_for_collection': ['gemini/gemini-2.5-flash'],
+        'enable_for_agent': ['gemini/gemini-2.5-flash', 'gemini/gemini-2.5-pro'],
     }
     embedding_tag_rules = {
         'enable_for_collection': ['*']
@@ -470,8 +474,11 @@ def create_gemini_config():
     config = {
         "name": provider,
         "label": "Google Gemini",
-        "completion_dialect": "google",
-        "embedding_dialect": "openai",
+        # litellm's LlmProviders enum has no "google" value - only "gemini"/"vertex_ai"/
+        # "vertex_ai_beta". "google" silently breaks any call site that uses this field
+        # (e.g. LLM_KEYWORD_EXTRACTION_PROVIDER) as a litellm custom_llm_provider.
+        "completion_dialect": "gemini",
+        "embedding_dialect": "gemini",
         "rerank_dialect": "jina_ai",
         "allow_custom_base_url": False,
         "base_url": "https://generativelanguage.googleapis.com"
