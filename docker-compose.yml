@@ -86,6 +86,12 @@ services:
       - NODE_IP=aperag-celeryworker
       - DOCRAY_HOST=${DOCRAY_HOST}
       - APERAG_API_BASE_URL=http://aperag-api:8000
+      # Local Ollama serializes embedding requests to one at a time regardless of
+      # concurrency settings on the Ollama side, and only handles a few concurrent
+      # completion requests - the default concurrency of 16 threads sends far more
+      # simultaneous LLM calls than a single local Ollama instance can service,
+      # causing connection errors/index failures under any real indexing load.
+      - CELERY_WORKER_CONCURRENCY=4
     command: ["/app/scripts/entrypoint.sh", "/app/scripts/start-celery-worker.sh"]
 
   celerybeat:

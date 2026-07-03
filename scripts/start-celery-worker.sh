@@ -8,4 +8,4 @@ if [ -z "${LOCAL_QUEUE_NAME}" ]; then
     export LOCAL_QUEUE_NAME="localhost"
 fi
 
-exec celery -A config.celery worker -l INFO --concurrency=16 -Q ${LOCAL_QUEUE_NAME},celery --pool=threads
+exec celery -A config.celery worker -l INFO --concurrency=${CELERY_WORKER_CONCURRENCY:-16} -Q ${LOCAL_QUEUE_NAME},celery --pool=threads
