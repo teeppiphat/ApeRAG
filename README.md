@@ -48,12 +48,20 @@ This fork was built around a local [Ollama](https://ollama.com/) instance runnin
 
 #### MCP (Model Context Protocol) Support
 
-ApeRAG supports [MCP](https://modelcontextprotocol.io/) integration, allowing AI assistants to interact with your knowledge base directly:
+ApeRAG exposes an [MCP](https://modelcontextprotocol.io/) server at `http://localhost:8000/mcp/` (streamable HTTP transport, stateless — no session setup required) with 5 tools: `list_collections`, `search_collection` (hybrid vector/full-text/graph/summary/vision search), `search_chat_files`, `web_search`, and `web_read`.
+
+Generate an API key from **Settings → API Keys** in the UI (or `GET /api/v1/apikeys`). Every client below needs it as a `Bearer` token — **keep the trailing slash on the URL** (`/mcp/`, not `/mcp`); without it the server 307-redirects, and some clients don't forward the `Authorization` header through that redirect.
+
+<details>
+<summary><strong>Claude Code</strong></summary>
+
+Add to `.mcp.json` (project) or `~/.claude.json` (user-wide):
 
 ```json
 {
   "mcpServers": {
-    "aperag-mcp": {
+    "aperag": {
+      "type": "http",
       "url": "http://localhost:8000/mcp/",
       "headers": {
         "Authorization": "Bearer your-api-key-here"
@@ -63,7 +71,94 @@ ApeRAG supports [MCP](https://modelcontextprotocol.io/) integration, allowing AI
 }
 ```
 
-Generate an API key from **Settings → API Keys** in the UI, or use the system-issued one visible via `GET /api/v1/user`. The MCP server exposes collection browsing, hybrid (vector/full-text/graph) search, and natural-language querying over your documents.
+Or via the CLI:
+
+```bash
+claude mcp add --transport http aperag http://localhost:8000/mcp/ \
+  --header "Authorization: Bearer your-api-key-here"
+```
+
+</details>
+
+<details>
+<summary><strong>Claude Desktop</strong></summary>
+
+Claude Desktop's `claude_desktop_config.json` only loads local stdio servers directly from JSON — it can't call a remote HTTP endpoint with a custom header on its own. Bridge it with [`mcp-remote`](https://www.npmjs.com/package/mcp-remote) (requires Node.js):
+
+```json
+{
+  "mcpServers": {
+    "aperag": {
+      "command": "npx",
+      "args": [
+        "-y", "mcp-remote", "http://localhost:8000/mcp/",
+        "--header", "Authorization:${APERAG_AUTH_HEADER}"
+      ],
+      "env": {
+        "APERAG_AUTH_HEADER": "Bearer your-api-key-here"
+      }
+    }
+  }
+}
+```
+
+Use the `env` var + no-space `Authorization:${...}` form above rather than a literal `"Authorization: Bearer ..."` string — Claude Desktop has a known bug on some platforms where spaces inside `args` aren't escaped correctly, which silently breaks the header.
+
+Edit via Claude menu → Settings → Developer → Edit Config, then fully quit and reopen Claude Desktop.
+
+</details>
+
+<details>
+<summary><strong>Codex CLI</strong></summary>
+
+Add to `~/.codex/config.toml`. Prefer pulling the key from an environment variable rather than committing it to the file:
+
+```toml
+[mcp_servers.aperag]
+url = "http://localhost:8000/mcp/"
+bearer_token_env_var = "APERAG_API_KEY"
+```
+
+```bash
+export APERAG_API_KEY=your-api-key-here
+```
+
+</details>
+
+<details>
+<summary><strong>OpenCode</strong></summary>
+
+Add to `opencode.json`. Note the top-level key is `mcp`, not `mcpServers`, and `type` must be set explicitly:
+
+```json
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "aperag": {
+      "type": "remote",
+      "url": "http://localhost:8000/mcp/",
+      "enabled": true,
+      "headers": {
+        "Authorization": "Bearer your-api-key-here"
+      }
+    }
+  }
+}
+```
+
+</details>
+
+**Sanity-check the server directly** before debugging a client, since it isolates whether the problem is ApeRAG or the client config:
+
+```bash
+curl http://localhost:8000/mcp/ \
+  -H "Authorization: Bearer your-api-key-here" \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json, text/event-stream" \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}'
+```
+
+A working server returns an `event: message` / `data: {...}` block listing the 5 tools. If you get HTTP 406, you're missing the `Accept` header above — most real MCP clients set it for you, curl doesn't.
 
 #### Enhanced Document Parsing
 
