@@ -1,49 +1,50 @@
 # ApeRAG
-[![Trust Score](https://archestra.ai/mcp-catalog/api/badge/quality/apecloud/ApeRAG)](https://archestra.ai/mcp-catalog/apecloud__aperag)
 
 ![HarryPotterKG2.png](docs%2Fen-US%2Fimages%2FHarryPotterKG2.png)
 
 ![chat2.png](docs%2Fen-US%2Fimages%2Fchat2.png)
 
+ApeRAG is a RAG (Retrieval-Augmented Generation) platform that combines Graph RAG, vector search, and full-text search with AI agents. Build hybrid-retrieval AI applications with multimodal document processing, intelligent agents, and a knowledge graph over your own documents.
 
-ApeRAG is a production-ready RAG (Retrieval-Augmented Generation) platform that combines Graph RAG, vector search, and full-text search with advanced AI agents. Build sophisticated AI applications with hybrid retrieval, multimodal document processing, intelligent agents, and enterprise-grade management features.
-
-ApeRAG is the best choice for building your own Knowledge Graph, Context Engineering, and deploying intelligent AI agents that can autonomously search and reason across your knowledge base.
-
-[阅读中文文档](README-zh.md)
+**This fork** (`teeppiphat/ApeRAG`) is customized for **single-machine, single-user deployment** — no login/registration required, English-only UI, and built-in Thai-language document/embedding support. See [CHANGELOG.md](./CHANGELOG.md) for the full list of changes from upstream [`apecloud/ApeRAG`](https://github.com/apecloud/ApeRAG).
 
 - [Quick Start](#quick-start)
 - [Key Features](#key-features)
-- [Kubernetes Deployment (Recommended for Production)](#kubernetes-deployment-recommended-for-production)
-- [Development](./docs/en-US/development-guide.md)
-- [Build Docker Image](./docs/en-US/build-docker-image.md)
+- [Configuration](#configuration)
+- [Development](./docs/en-US/development/development-guide.md)
+- [Build Docker Image](./docs/en-US/deployment/build-docker-image.md)
+- [Kubernetes Deployment](#kubernetes-deployment)
 - [Acknowledgments](#acknowledgments)
 - [License](#license)
 
 ## Quick Start
 
-> Before installing ApeRAG, make sure your machine meets the following minimum system requirements:
+> Minimum system requirements:
 >
 > - CPU >= 2 Core
-> - RAM >= 4 GiB
-> - Docker & Docker Compose
-
-The easiest way to start ApeRAG is through Docker Compose. Before running the following commands, make sure that [Docker](https://docs.docker.com/get-docker/) and [Docker Compose](https://docs.docker.com/compose/install/) are installed on your machine:
+> - RAM >= 4 GiB (16 GiB+ recommended if also running local LLMs via Ollama)
+> - Docker & Docker Compose (or [Podman](https://podman.io/) + `podman-compose`, which is what this fork is developed against on macOS)
 
 ```bash
-git clone https://github.com/apecloud/ApeRAG.git
+git clone https://github.com/teeppiphat/ApeRAG.git
 cd ApeRAG
 cp envs/env.template .env
 docker-compose up -d --pull always
+# or, with Podman:
+# podman-compose -f docker-compose.yml up -d
 ```
 
-After running, you can access ApeRAG in your browser at:
-- **Web Interface**: http://localhost:3000/web/
-- **API Documentation**: http://localhost:8000/docs
+Once the containers are healthy, open **http://localhost:8088** — you're taken straight into the app with no sign-in step. The API and its docs are at http://localhost:8000/docs.
+
+All published ports are bound to `127.0.0.1` by default (see [Configuration](#configuration)), since there's no login to gate access.
+
+#### Using a local LLM (Ollama)
+
+This fork was built around a local [Ollama](https://ollama.com/) instance running natively on the host rather than a containerized one. From inside the containers, the host is reachable at `http://host.docker.internal:11434`. After starting Ollama and pulling a model, add it as an LLM provider from **Settings → Models** in the UI, using that base URL plus `/v1`.
 
 #### MCP (Model Context Protocol) Support
 
-ApeRAG supports [MCP (Model Context Protocol)](https://modelcontextprotocol.io/) integration, allowing AI assistants to interact with your knowledge base directly. After starting the services, configure your MCP client with:
+ApeRAG supports [MCP](https://modelcontextprotocol.io/) integration, allowing AI assistants to interact with your knowledge base directly:
 
 ```json
 {
@@ -58,172 +59,58 @@ ApeRAG supports [MCP (Model Context Protocol)](https://modelcontextprotocol.io/)
 }
 ```
 
-**Authentication** (by priority):
-1. **HTTP Authorization Header** (Recommended): `Authorization: Bearer your-api-key`
-2. **Environment Variable** (Fallback): `APERAG_API_KEY=your-api-key`
-
-**Important**: Use your deployed API origin if not local (e.g. `https://your-host/mcp/`). Replace `your-api-key-here` with a valid API key from your ApeRAG settings.
-
-The MCP server provides:
-- **Collection browsing**: List and explore your knowledge collections
-- **Hybrid search**: Search using vector, full-text, and graph methods
-- **Intelligent querying**: Ask natural language questions about your documents
+Generate an API key from **Settings → API Keys** in the UI, or use the system-issued one visible via `GET /api/v1/user`. The MCP server exposes collection browsing, hybrid (vector/full-text/graph) search, and natural-language querying over your documents.
 
 #### Enhanced Document Parsing
 
-For enhanced document parsing capabilities, ApeRAG supports an **advanced document parsing service** powered by MinerU, which provides superior parsing for complex documents, tables, and formulas. 
-
-<details>
-<summary><strong>Enhanced Document Parsing Commands</strong></summary>
+For complex documents, tables, and formulas, ApeRAG can use [MinerU](https://github.com/opendatalab/MinerU) via the optional `doc-ray` service:
 
 ```bash
-# Enable advanced document parsing service
 DOCRAY_HOST=http://aperag-docray:8639 docker compose --profile docray up -d
-
-# Enable advanced parsing with GPU acceleration 
+# or with GPU acceleration:
 DOCRAY_HOST=http://aperag-docray-gpu:8639 docker compose --profile docray-gpu up -d
 ```
 
-Or use the Makefile shortcuts (requires [GNU Make](https://www.gnu.org/software/make/)):
-```bash
-# Enable advanced document parsing service
-make compose-up WITH_DOCRAY=1
-
-# Enable advanced parsing with GPU acceleration (recommended)
-make compose-up WITH_DOCRAY=1 WITH_GPU=1
-```
-
-</details>
+`doc-ray` is CPU/GPU-intensive — if you're running it alongside other workloads on the same machine, keep an eye on resource contention.
 
 #### Development & Contributing
 
-For developers interested in source code development, advanced configurations, or contributing to ApeRAG, please refer to our [Development Guide](./docs/en-US/development-guide.md) for detailed setup instructions.
+See the [Development Guide](./docs/en-US/development/development-guide.md) for source setup, testing, and contribution instructions.
 
 ## Key Features
 
-**1. Advanced Index Types**:
-Five comprehensive index types for optimal retrieval: **Vector**, **Full-text**, **Graph**, **Summary**, and **Vision** - providing multi-dimensional document understanding and search capabilities.
+**1. Advanced Index Types**: Five index types — **Vector**, **Full-text**, **Graph**, **Summary**, and **Vision** — for multi-dimensional document understanding and retrieval.
 
-**2. Intelligent AI Agents**:
-Built-in AI agents with MCP (Model Context Protocol) tool support that can automatically identify relevant collections, search content intelligently, and provide web search capabilities for comprehensive question answering.
+**2. Intelligent AI Agents**: Built-in agents with MCP tool support that identify relevant collections, search intelligently, and can fall back to web search.
 
-**3. Enhanced Graph RAG with Entity Normalization**:
-Deeply modified LightRAG implementation with advanced entity normalization (entity merging) for cleaner knowledge graphs and improved relational understanding.
+**3. Enhanced Graph RAG**: A modified [LightRAG](https://github.com/HKUDS/LightRAG) implementation with entity normalization for cleaner knowledge graphs.
 
-**4. Multimodal Processing & Vision Support**:
-Complete multimodal document processing including vision capabilities for images, charts, and visual content analysis alongside traditional text processing.
+**4. Multimodal Processing & Vision Support**: Document parsing including vision analysis of images, charts, and visual content alongside text.
 
-**5. Hybrid Retrieval Engine**:
-Sophisticated retrieval system combining Graph RAG, vector search, full-text search, summary-based retrieval, and vision-based search for comprehensive document understanding.
+**5. Hybrid Retrieval Engine**: Combines Graph RAG, vector search, full-text search, summary-based retrieval, and vision-based search.
 
-**6. MinerU Integration**:
-Advanced document parsing service powered by MinerU technology, providing superior parsing for complex documents, tables, formulas, and scientific content with optional GPU acceleration.
+**6. Multilingual by design**: English and Thai are both first-class for embeddings and full-text search — Elasticsearch's analyzer is chosen per collection language (Thai gets Lucene's built-in `thai` analyzer, not a CJK-oriented one), and `bge-m3` is the default embedding model for good cross-lingual (Thai↔English) retrieval.
 
-**7. Production-Grade Deployment**:
-Full Kubernetes support with Helm charts and KubeBlocks integration for simplified deployment of production-grade databases (PostgreSQL, Redis, Qdrant, Elasticsearch, Neo4j).
+**7. MinerU Integration**: Optional advanced document parsing for complex documents, tables, formulas, and scientific content, with optional GPU acceleration.
 
-**8. Enterprise Management**:
-Built-in audit logging, LLM model management, graph visualization, comprehensive document management interface, and agent workflow management.
+**8. No-Login Single-User Mode**: `AUTH_TYPE=none` (the default in this fork) skips sign-in/sign-up entirely and auto-provisions a local admin account — appropriate for a single person running this on their own machine. Set `AUTH_TYPE=cookie` to restore normal username/password auth.
 
-**9. MCP Integration**:
-Full support for Model Context Protocol (MCP), enabling seamless integration with AI assistants and tools for direct knowledge base access and intelligent querying.
+**9. Developer Friendly**: FastAPI backend, Next.js frontend, async task processing with Celery, and an agent development framework.
 
-**10. Developer Friendly**:
-FastAPI backend, React frontend, async task processing with Celery, extensive testing, comprehensive development guides, and agent development framework for easy contribution and customization.
+## Configuration
 
-## Kubernetes Deployment (Recommended for Production)
+Key settings in `.env` (copied from `envs/env.template`):
 
-> **Enterprise-grade deployment with high availability and scalability**
+| Variable | Default (this fork) | Notes |
+|---|---|---|
+| `AUTH_TYPE` | `none` | `none` = no login, single auto-provisioned admin user. `cookie` = normal username/password auth. |
+| `REGISTER_MODE` | `unlimited` | Only relevant when `AUTH_TYPE=cookie`. |
 
-Deploy ApeRAG to Kubernetes using our provided Helm chart. This approach offers high availability, scalability, and production-grade management capabilities.
+Docker Compose port bindings (`docker-compose.yml`) are all scoped to `127.0.0.1` — if you need LAN/remote access, change the bindings deliberately and make sure you understand the access-control implications of `AUTH_TYPE=none` first.
 
-### Prerequisites
+## Kubernetes Deployment
 
-*   [Kubernetes cluster](https://kubernetes.io/docs/setup/) (v1.20+)
-*   [`kubectl`](https://kubernetes.io/docs/tasks/tools/) configured and connected to your cluster
-*   [Helm v3+](https://helm.sh/docs/intro/install/) installed
-
-### Clone the Repository
-
-First, clone the ApeRAG repository to get the deployment files:
-
-```bash
-git clone https://github.com/apecloud/ApeRAG.git
-cd ApeRAG
-```
-
-### Step 1: Deploy Database Services
-
-ApeRAG requires PostgreSQL, Redis, Qdrant, and Elasticsearch. You have two options:
-
-**Option A: Use existing databases** - If you already have these databases running in your cluster, edit `deploy/aperag/values.yaml` to configure your database connection details, then skip to Step 2.
-
-**Option B: Deploy databases with KubeBlocks** - Use our automated database deployment (database connections are pre-configured):
-
-```bash
-# Navigate to database deployment scripts
-cd deploy/databases/
-
-# (Optional) Review configuration - defaults work for most cases
-# edit 00-config.sh
-
-# Install KubeBlocks and deploy databases
-bash ./01-prepare.sh          # Installs KubeBlocks
-bash ./02-install-database.sh # Deploys PostgreSQL, Redis, Qdrant, Elasticsearch
-
-# Monitor database deployment
-kubectl get pods -n default
-
-# Return to project root for Step 2
-cd ../../
-```
-
-Wait for all database pods to be in `Running` status before proceeding.
-
-### Step 2: Deploy ApeRAG Application
-
-```bash
-# If you deployed databases with KubeBlocks in Step 1, database connections are pre-configured
-# If you're using existing databases, edit deploy/aperag/values.yaml with your connection details
-
-# Deploy ApeRAG
-helm install aperag ./deploy/aperag --namespace default --create-namespace
-
-# Monitor ApeRAG deployment
-kubectl get pods -n default -l app.kubernetes.io/instance=aperag
-```
-
-### Configuration Options
-
-**Resource Requirements**: By default, includes [`doc-ray`](https://github.com/apecloud/doc-ray) service (requires 4+ CPU cores, 8GB+ RAM). To disable: set `docray.enabled: false` in `values.yaml`.
-
-**Advanced Settings**: Review `values.yaml` for additional configuration options including images, resources, and Ingress settings.
-
-### Access Your Deployment
-
-Once deployed, access ApeRAG using port forwarding:
-
-```bash
-# Forward ports for quick access
-kubectl port-forward svc/aperag-frontend 3000:3000 -n default
-kubectl port-forward svc/aperag-api 8000:8000 -n default
-
-# Access in browser
-# Web Interface: http://localhost:3000
-# API Documentation: http://localhost:8000/docs
-```
-
-For production environments, configure Ingress in `values.yaml` for external access.
-
-### Troubleshooting
-
-**Database Issues**: See `deploy/databases/README.md` for KubeBlocks management, credentials, and uninstall procedures.
-
-**Pod Status**: Check pod logs for any deployment issues:
-```bash
-kubectl logs -f deployment/aperag-api -n default
-kubectl logs -f deployment/aperag-frontend -n default
-```
+This fork is optimized for single-machine use, so Kubernetes isn't the primary path here — but the upstream Helm chart under `deploy/aperag/` and the KubeBlocks database scripts under `deploy/databases/` are still present and functional if you need multi-node deployment. See upstream [`apecloud/ApeRAG`'s README](https://github.com/apecloud/ApeRAG#kubernetes-deployment-recommended-for-production) for the full walkthrough.
 
 ## Acknowledgments
 
@@ -235,18 +122,7 @@ The graph-based knowledge retrieval capabilities in ApeRAG are powered by a deep
 - **Authors**: Zirui Guo, Lianghao Xia, Yanhua Yu, Tu Ao, Chao Huang
 - **License**: MIT License
 
-We have extensively modified LightRAG to support production-grade concurrent processing, distributed task queues (Celery/Prefect), and stateless operations. See our [LightRAG modifications changelog](./aperag/graph/changelog.md) for details.
-
-## Community
-
-* [Discord](https://discord.gg/FsKpXukFuB)
-* [Feishu](docs%2Fen-US%2Fimages%2Ffeishu-qr-code.png)
-
-<img src="docs/en-US/images/feishu-qr-code.png" alt="Feishu" width="150"/>
-
-## Star History
-
-![star-history-2025922.png](docs%2Fen-US%2Fimages%2Fstar-history-2025922.png)
+See the [LightRAG modifications changelog](./aperag/graph/lightrag/CHANGELOG.md) for details, and this fork's own [CHANGELOG.md](./CHANGELOG.md) for changes made on top of upstream ApeRAG.
 
 ## License
 
