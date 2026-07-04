@@ -61,10 +61,13 @@ class MinerUParser(BaseParser):
         }
 
         # 1. Get upload URL
+        # model_version must be one of "pipeline"/"vlm"/"MinerU-HTML" - MinerU rejects any
+        # other value outright ("v2" used to be accepted but no longer is). "vlm" is MinerU's
+        # own recommended option and handles tables/formulas better than the "pipeline" default.
         upload_url_payload = {
             "language": "auto",
             "files": [{"name": path.name, "is_ocr": True}],
-            "model_version": "v2",
+            "model_version": "vlm",
         }
         try:
             resp = requests.post(
